@@ -1,0 +1,166 @@
+/* Esercizio 1
+
+Recuperate tutte le tracce che abbiano come genere “Pop” o “Rock”. */
+
+SELECT 
+    *
+FROM
+    TRACK
+        JOIN
+    GENRE ON GENRE.GENREID = TRACK.GENREID
+WHERE
+    GENRE.NAME IN ('Pop' , 'Rock');
+
+
+
+
+/* Esercizio 2
+
+Elencate tutti gli artisti e/o gli album che inizino con la lettera “A”. */
+
+SELECT 
+		*
+FROM 
+	ARTIST
+LEFT JOIN 
+	ALBUM ON ALBUM.ARTISTID=ARTIST.ARTISTID
+WHERE ALBUM.TITLE LIKE "A%" 
+		OR ARTIST.NAME LIKE "A%";
+
+
+
+/* Esercizio 3
+
+Recuperate i nomi degli album o degli artisti che abbiano pubblicazioni precedenti all’anno 2000. */
+
+SELECT *
+FROM employee
+where BIRTHDATE < '1980-01-01' -- DATE('2000-01-01');
+-- or HIREDATE < 2020;
+
+/*sercizio 4
+
+Elencate tutte le tracce che hanno come genere “Jazz” o che durano meno di 3 minuti. */
+
+SELECT 
+    *
+FROM
+    TRACK
+        JOIN
+    GENRE ON GENRE.GENREID = TRACK.TRACKID
+WHERE
+    MILLISECONDS <= 180000
+        OR GENRE.NAME = 'JAZZ';
+
+
+/* Esercizio 5
+
+Recuperate tutte le tracce più lunghe della durata media. */
+
+SELECT AVG(MILLISECONDS)
+FROM TRACK;
+
+
+SELECT *
+FROM TRACK
+WHERE MILLISECONDS> 393599.2121;
+
+SELECT *
+FROM TRACK
+WHERE MILLISECONDS> (SELECT AVG(MILLISECONDS) FROM TRACK);
+
+
+/* Esercizio 6
+
+Individuate i generi che hanno tracce con una durata media maggiore di 4 minuti. */
+
+SELECT distinct GENRE.NAME
+FROM TRACK
+LEFT JOIN GENRE ON TRACK.GENREID=GENRE.GENREID
+WHERE MILLISECONDS>240000;
+
+/* Esercizio 7
+
+Individuate gli artisti che hanno rilasciato più di un album. */
+
+SELECT ARTIST.ARTISTID, ARTIST.NAME, COUNT(ALBUM.TITLE) AS NUM_ALBUM
+FROM ARTIST
+LEFT JOIN ALBUM ON ALBUM.ARTISTID=ARTIST.ARTISTID
+GROUP BY ARTIST.ARTISTID, ARTIST.NAME
+HAVING NUM_ALBUM>1
+ORDER BY NUM_ALBUM DESC;
+
+SELECT DISTINCT ARTIST.NAME, ALBUM.TITLE
+FROM ARTIST
+LEFT JOIN ALBUM ON ALBUM.ARTISTID=ARTIST.ARTISTID;
+
+
+
+SELECT NAME, COUNT(TITLE) AS NUM_ALBUM
+FROM ARTIST
+LEFT JOIN ALBUM ON ALBUM.ARTISTID=ARTIST.ARTISTID
+GROUP BY NAME
+HAVING NUM_ALBUM>1 
+ORDER BY NUM_ALBUM DESC;
+
+
+
+/* Esercizio 8
+
+Trovate la traccia più lunga in ogni album.*/
+
+SELECT TITLE, NAME, MILLISECONDS
+
+FROM (SELECT TITLE, T.NAME, MILLISECONDS, ROW_NUMBER() OVER( PARTITION BY TITLE ORDER BY  T.MILLISECONDS DESC) AS RN
+-- T.*, A.TITLE, ROW_NUMBER() OVER( PARTITION BY T.ALBUMID ORDER BY  T.MILLISECONDS DESC) AS RN
+FROM TRACK AS T
+JOIN ALBUM AS A ON T.ALBUMID=A.ALBUMID) B
+WHERE RN=1;
+
+
+
+SELECT 	B.ALBUMID, 
+		TITLE,
+		B.NAME,
+        MILLISECONDS,
+        RN
+
+FROM (SELECT T.*, A.TITLE, ROW_NUMBER() OVER( PARTITION BY T.ALBUMID ORDER BY  T.MILLISECONDS DESC) AS RN
+FROM TRACK AS T
+JOIN ALBUM AS A ON T.ALBUMID=A.ALBUMID) B
+-- WHERE RN=1
+;
+
+
+/* Esercizio 8 BIS
+
+Individuate la durata media delle tracce per ogni album. */
+-- FASE ESPLORATIVA TABELLA
+SELECT TRACK.ALBUMID, TRACK.TRACKID, TITLE, TRACK.NAME, MILLISECONDS
+FROM TRACK
+LEFT JOIN ALBUM ON TRACK.ALBUMID=ALBUM.ALBUMID
+ORDER BY TRACK.ALBUMID, TRACK.TRACKID;
+
+
+-- SELEZIONE RICHIESTA
+
+SELECT 
+    TITLE , AVG(MILLISECONDS) AS AVG_TRACK
+FROM
+    TRACK
+        LEFT JOIN
+    ALBUM ON TRACK.ALBUMID = ALBUM.ALBUMID
+GROUP BY TITLE;
+-- 'For Those About To Rock We Salute You'
+
+/* Esercizio 9
+
+Individuate gli album che hanno più di 20 tracce e mostrate il nome dell’album e il numero di tracce in esso contenute.*/
+
+SELECT TITLE, COUNT(DISTINCT NAME) NUM_TRACK
+FROM TRACK
+LEFT JOIN ALBUM ON TRACK.ALBUMID=ALBUM.ALBUMID
+GROUP BY TITLE
+HAVING NUM_TRACK>20
+ORDER BY TITLE;
+
